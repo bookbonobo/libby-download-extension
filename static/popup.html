@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="popup.css"/>
+</head>
+
+<body>
+<div id="popup-content" class="col text-center">
+    <h3 class="title">Libby Downloader</h3>
+    <div class="buttons">
+        <button id="start-download-btn" class="btn btn-primary">
+            <span class="btn-label"><i class="bi bi-cloud-download"></i></span>
+        </button>
+        <button id="clear-tasks" class="btn btn-danger">
+            <span class="btn-label"><i class="bi bi-trash"></i></span>
+        </button>
+    </div>
+    <div class="table-responsive-sm tasks-wrapper">
+        <table id="task-table" class="table table-hover table-bordered caption-top">
+            <caption>Tasks</caption>
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">File</th>
+                <th scope="col">Task</th>
+                <th scope="col">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="warn-content" class="hidden alert alert-warning" role="alert">
+    Navigate to an Audiobook on <a href="https://libbyapp.com">Libby</a> to begin
+</div>
+<div id="error-content" class="hidden alert alert-danger" role="alert">
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

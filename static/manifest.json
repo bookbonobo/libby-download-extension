@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Libby Download",
+  "version": "0.1",
+  "description": "Downloads Audiobooks for transfer to unsupported devices",
+  "icons": {
+    "48": "icons/music-player-fill.svg",
+    "96": "icons/music-player-fill.svg"
+  },
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "https://*.libbyapp.com/*",
+    "https://*.overdrive.com/*",
+    "*://*/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": "icons/music-player-fill.svg",
+    "default_title": "Libby Download",
+    "default_popup": "popup.html"
+  }
+}

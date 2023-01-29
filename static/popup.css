@@ -1,0 +1,30 @@
+html,
+body {
+    width: 450px;
+    height: 550px;
+}
+
+.hidden {
+    display: none;
+}
+
+.title {
+    padding-bottom: 15px;
+}
+
+.buttons {
+    padding: 10px;
+}
+
+.tasks-wrapper {
+    width: 400px;
+    height: 400px;
+    overflow: auto;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 10px;
+}
+
+#popup-content {
+    padding: 10px
+}
