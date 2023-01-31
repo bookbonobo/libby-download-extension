@@ -14,6 +14,8 @@ browser.runtime.onMessage.addListener(handleMessage);
 async function handleMessage(message: Message) {
   if (message.cmd === "start") {
     browser.tabs.query({ currentWindow: true, active: true }).then(async () => {
+      // Clear active tasks
+      await browser.storage.local.set({ "tasks": [] });
       reloadTask = await addTask(new Task("", "Reloading Tab", "Running"));
       console.log("Starting network listener...");
       browser.webRequest.onBeforeRequest.addListener(

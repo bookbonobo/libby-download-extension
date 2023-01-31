@@ -161,4 +161,5 @@ export async function downloadZip(zip: any, title: string, expiration: Date) {
     url: archiveUrl
   }).catch(handleError);
   await updateTask(processTask, "Completed");
+  URL.revokeObjectURL(archiveUrl);
 }

@@ -14,8 +14,7 @@
     "webRequest",
     "webRequestBlocking",
     "https://*.libbyapp.com/*",
-    "https://*.overdrive.com/*",
-    "*://*/*"
+    "https://*.overdrive.com/*"
   ],
   "background": {
     "scripts": [
