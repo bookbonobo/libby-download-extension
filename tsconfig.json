@@ -3,8 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
     "moduleResolution": "Node",
-    "module": "es2015",
-    "target": "es2015",
+    "module": "es2020",
+    "target": "es2020",
     "allowJs": true,
     "esModuleInterop": true
   },

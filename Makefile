@@ -1,3 +1,3 @@
 prod:
-	npx webpack --config webpack.prod.js
+	npm run build
 	(cd dist && web-ext build --overwrite-dest)
