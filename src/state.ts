@@ -44,7 +44,10 @@ export class LoadState {
   chapters: Array<Chapter>;
 
   loaded(): boolean {
-    return this.expires != null && this.title != null && this.chapters != null && this.authors != null;
+    return this.expires != undefined
+      && this.title != undefined
+      && this.chapters != undefined
+      && this.authors != undefined;
   }
 }
 
