@@ -16,7 +16,7 @@ export async function mp3WithCUE(state: LoadState) {
   const spine = await getSpine(state);
   const zip = new JSZip();
   const folder = zip.folder(mp3Meta.title);
-  let cueContent = `Title "${mp3Meta.title}"
+  let cueContent = `TITLE "${mp3Meta.title}"
 FILE "${mp3Meta.title}.mp3" MP3`;
 
   const parts = [];
