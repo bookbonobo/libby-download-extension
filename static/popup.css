@@ -16,6 +16,10 @@ body {
     padding: 10px;
 }
 
+.config {
+    padding: 10px;
+}
+
 .tasks-wrapper {
     width: 400px;
     height: 400px;

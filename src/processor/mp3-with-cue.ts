@@ -1,9 +1,8 @@
-import { downloadZip, getMp3Meta, getSpine, Spine, zeroPad } from "./utils";
-import { Task } from "../common";
+import { downloadZip, fetchPart, getMp3Meta, getSpine, zeroPad } from "./utils";
 import { parseBuffer } from "music-metadata";
 import JSZip from "jszip";
 import NodeID3 from "node-id3";
-import { addTask, LoadState, updateTask } from "../state";
+import { LoadState } from "../state";
 
 /**
  * Fetch Audiobook as a single merged MP3 file with a .cue file
@@ -23,7 +22,7 @@ FILE "${mp3Meta.title}.mp3" MP3`;
 
   // Download first part
   let offset = 0;
-  let current = await fetchPart(spine, spine.index[0].start.part);
+  let current = await fetchPartWithDuration(spine.index[0].start.part, spine.getPartUrl(spine.index[0].start.part));
   parts.push(current.content);
   const mp3Chapters = [];
 
@@ -33,7 +32,7 @@ FILE "${mp3Meta.title}.mp3" MP3`;
     const idx = spine.index.indexOf(entry);
     if (entry.start.part > current.part) {
       offset += current.duration;
-      current = await fetchPart(spine, entry.start.part);
+      current = await fetchPartWithDuration(entry.start.part, spine.getPartUrl(entry.start.part));
       parts.push(current.content);
     }
 
@@ -53,7 +52,7 @@ FILE "${mp3Meta.title}.mp3" MP3`;
   // If the last chapter spans a part boundary, have to fetch the last one too
   const endPart = spine.index[spine.index.length - 1].end.part;
   if (parts.length < endPart) {
-    current = await fetchPart(spine, endPart);
+    current = await fetchPartWithDuration(endPart, spine.partFiles.get(endPart));
     parts.push(current.content);
   }
 
@@ -102,17 +101,15 @@ class FetchResult {
 /**
  * Fetch and calculate duration of a part file
  *
- * @param spine
  * @param part
+ * @param url
  */
-async function fetchPart(spine: Spine, part: number): Promise<FetchResult> {
-  const downloadTask = await addTask(new Task(`Part${zeroPad(part)}`, "Download", "Running"));
-  const response = await fetch(spine.partFiles.get(part));
-  const content = new Uint8Array(await response.arrayBuffer());
-  await updateTask(downloadTask, "Completed");
+export async function fetchPartWithDuration(part: number, url: URL): Promise<FetchResult> {
+  const content = await fetchPart(part, url);
   const partMeta = await parseBuffer(content);
   return new FetchResult(part, content, partMeta.format.duration);
 }
+
 
 /**
  * Format second offsets as cue compatible timestamp

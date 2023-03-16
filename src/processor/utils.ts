@@ -56,6 +56,10 @@ export class Spine {
     this.partFiles = partFiles;
     this.index = index;
   }
+
+  getPartUrl(part: number): URL {
+    return this.partFiles.get(part)
+  }
 }
 
 /**
@@ -162,4 +166,18 @@ export async function downloadZip(zip: any, title: string, expiration: Date) {
   }).catch(handleError);
   await updateTask(processTask, "Completed");
   URL.revokeObjectURL(archiveUrl);
+}
+
+/**
+ * Fetch and calculate duration of a part file
+ *
+ * @param part
+ * @param url
+ */
+export async function fetchPart(part: number, url: URL): Promise<Uint8Array> {
+  const downloadTask = await addTask(new Task(`Part${zeroPad(part)}`, "Download", "Running"));
+  const response = await fetch(url);
+  const content = new Uint8Array(await response.arrayBuffer());
+  await updateTask(downloadTask, "Completed");
+  return content
 }

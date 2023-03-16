@@ -1,24 +1,28 @@
-import { handleError, Message, Task } from "./common";
+import { handleError, Command, Task } from "./common";
 import { addTask, Chapter, LoadState, Title, updateTask } from "./state";
 import { mp3WithCUE } from "./processor/mp3-with-cue";
+import { mp3Parts } from "./processor/mp3-parts";
 
 let state: LoadState;
 let running: boolean;
+let merge: boolean;
 let reloadTask: string;
-browser.runtime.onMessage.addListener(handleMessage);
+browser.runtime.onMessage.addListener(handleCommand);
 
 
 /**
  * Handle browser.runtime messages
  *
- * @param message Message content
+ * @param command Command
  */
-async function handleMessage(message: Message) {
-  if (message.cmd === "start") {
+async function handleCommand(command: Command) {
+  if (command.cmd === "start") {
     browser.tabs.query({ currentWindow: true, active: true }).then(async () => {
-      state = new LoadState();
       running = false;
       reloadTask = undefined;
+      // @ts-ignore
+      merge = command.args["merge"];
+      state = new LoadState();
       // Clear active tasks
       await browser.storage.local.set({ "tasks": [] });
       reloadTask = await addTask(new Task("", "Reloading Tab", "Running"));
@@ -38,7 +42,7 @@ async function handleMessage(message: Message) {
       console.log("Starting download...");
     });
   } else {
-    console.log(`Got command ${message.cmd}`);
+    console.log(`Got command ${command.cmd}`);
   }
 }
 
@@ -213,17 +217,33 @@ function runIfLoaded(): void {
       running = true;
       browser.webRequest.onBeforeRequest.removeListener(handleMainFrameWebRequest);
       browser.webRequest.onBeforeRequest.removeListener(handleBookMetaWebRequest);
-      mp3WithCUE(state)
-        .then(() => {
-          state = new LoadState();
-          running = false;
-        })
-        .catch((error) => {
-          addTask(new Task("", "Loading State", "Failed")).catch(handleError);
-          console.log(error);
-          state = new LoadState();
-          running = false;
-        });
+      if (merge) {
+        console.log("Merging files and parsing chapters");
+        mp3WithCUE(state)
+          .then(() => {
+            state = new LoadState();
+            running = false;
+          })
+          .catch((error) => {
+            addTask(new Task("", "Loading State", "Failed")).catch(handleError);
+            console.log(error);
+            state = new LoadState();
+            running = false;
+          });
+      } else {
+        console.log("Downloading files directly");
+        mp3Parts(state)
+          .then(() => {
+            state = new LoadState();
+            running = false;
+          })
+          .catch((error) => {
+            addTask(new Task("", "Loading State", "Failed")).catch(handleError);
+            console.log(error);
+            state = new LoadState();
+            running = false;
+          });
+      }
     }
     {
       console.log("Already running");
