@@ -1,14 +1,14 @@
 import { LoadState } from "../state";
-import { downloadZip, fetchPart, getMp3Meta, getSpine, zeroPad } from "./utils";
+import { downloadZip, getMp3Meta, getSpine, zeroPad } from "./utils";
 import JSZip from "jszip";
 import NodeID3 from "node-id3";
+import { fetchPart } from "./fetch";
 
 /**
  * Fetch Audiobook exactly as it comes from Libby
  *
  * @param state
  */
-
 export async function mp3Parts(state: LoadState) {
   const mp3Meta = await getMp3Meta(state);
   const spine = await getSpine(state);

@@ -1,5 +1,5 @@
 import { handleError, Task } from "../common";
-import { addTask, LoadState, updateTask } from "../state";
+import { addTask, Chapter, LoadState, ParsedPartPath, updateTask } from "../state";
 
 /**
  * MP3 metadata that should be added to the file
@@ -39,9 +39,10 @@ export class ChapterBounds {
   start: Position;
   end: Position;
 
-  constructor(title: string, start: Position) {
+  constructor(title: string, start: Position, end: Position) {
     this.title = title;
     this.start = start;
+    this.end = end;
   }
 }
 
@@ -58,7 +59,7 @@ export class Spine {
   }
 
   getPartUrl(part: number): URL {
-    return this.partFiles.get(part)
+    return this.partFiles.get(part);
   }
 }
 
@@ -118,20 +119,43 @@ export function getSpine(state: LoadState): Spine {
 
   // Build chapter index
   state.chapters.forEach((chapter, idx) => {
-    const path = new URL(chapter.path);
-    const split = path.pathname.split("-");
-    const partFile = split[split.length - 1];
-    const part = partFile.split(".")[0];
-    const partNumber = parseInt(part.replace(/\D/g, ""));
-    partMap.set(partNumber, path);
-    const position = new Position(partNumber, chapter.offset);
-    index.push(new ChapterBounds(chapter.title, position));
+    const firstUrl = new URL(chapter.paths[0]);
+    const firstPart = parsePartUrl(firstUrl);
+    partMap.set(firstPart, firstUrl);
+    // set chapter start
+    const bounds = new ChapterBounds(
+      chapter.title,
+      new Position(firstPart, chapter.offset),
+      new Position(firstPart, -1)
+    );
+    for (const path of chapter.paths.slice(1)) {
+      const url = new URL(path);
+      const partNumber = parsePartUrl(url);
+      partMap.set(partNumber, url);
+      bounds.end.part = partNumber;
+    }
+    index.push(bounds);
     if (idx > 0) {
-      index[idx - 1].end = position;
+      // if this isn't the first chapter, set the previous chapter's end to
+      // this chapters start
+      index[idx - 1].end = bounds.start;
     }
   });
-  index[index.length - 1].end = new Position(index[index.length - 1].start.part, -1);
+
   return new Spine(partMap, index);
+}
+
+/**
+ * Parse part number from url
+ *
+ * @param url
+ */
+function parsePartUrl(url: URL): number {
+  const split = url.pathname.split("-");
+  // paths have the form xxxxx-PartX.mp3, grab the part bit
+  const partFile = split[split.length - 1];
+  const part = partFile.split(".")[0];
+  return parseInt(part.replace(/\D/g, ""));
 }
 
 /**
@@ -156,7 +180,7 @@ export function zeroPad(index: number): string {
  */
 export async function downloadZip(zip: any, title: string, expiration: Date) {
   let zipName = `${title}_DUE_${expiration.toDateString()}.zip`;
-  zipName = zipName.replace(/[/\\?%*:|"<>]/g, '-');
+  zipName = zipName.replace(/[/\\?%*:|"<>]/g, "-");
   const processTask = await addTask(new Task(zipName, "Downloading Zip", "Running"));
   const archive = await zip.generateAsync({ type: "blob" });
   const archiveUrl = URL.createObjectURL(archive);
@@ -169,15 +193,39 @@ export async function downloadZip(zip: any, title: string, expiration: Date) {
 }
 
 /**
- * Fetch and calculate duration of a part file
+ * Parse table of contents
  *
- * @param part
- * @param url
+ * @param spine Mapping of "part" identifier -> url of resource
+ * @param toc TOC from api
  */
-export async function fetchPart(part: number, url: URL): Promise<Uint8Array> {
-  const downloadTask = await addTask(new Task(`Part${zeroPad(part)}`, "Download", "Running"));
-  const response = await fetch(url);
-  const content = new Uint8Array(await response.arrayBuffer());
-  await updateTask(downloadTask, "Completed");
-  return content
+export function parseToc(spine: Map<string, string>, toc: any): Chapter[] {
+  const chapters: Chapter[] = [];
+  for (const row of toc) {
+    const last = chapters[chapters.length - 1];
+    if (last && last.title === row.title) {
+      console.log(`Found contiguous chapters with the same name, merging ${row.title}`);
+      if (row.contents) {
+        for (const sub of row.contents) {
+          const partUrl = spine.get(sub.path);
+          if (last.paths[last.paths.length - 1] != partUrl) {
+            last.paths.push(partUrl);
+          }
+        }
+      }
+    } else {
+      const part = new ParsedPartPath(row.path);
+      const chapter = new Chapter(row.title, [spine.get(part.path)], part.offset);
+      if (row.contents) {
+        for (const sub of row.contents) {
+          const part = new ParsedPartPath(sub.path);
+          const partUrl = spine.get(part.path);
+          if (chapter.paths[chapter.paths.length - 1] != partUrl) {
+            chapter.paths.push(partUrl);
+          }
+        }
+      }
+      chapters.push(chapter);
+    }
+  }
+  return chapters;
 }

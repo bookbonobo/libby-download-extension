@@ -41,9 +41,9 @@ function reloadTasks(tasks: Array<Task>) {
   const tbody = document.createElement("tbody");
   tasks.forEach((taskStatus, idx) => {
       const row = document.createElement("tr");
-      if (taskStatus.state === "Completed") {
+      if (taskStatus.state.startsWith("Completed")) {
         row.classList.add("table-success");
-      } else if (taskStatus.state === "Failed") {
+      } else if (taskStatus.state.startsWith("Failed")) {
         row.classList.add("table-danger");
       } else {
         row.classList.add("table-primary");
