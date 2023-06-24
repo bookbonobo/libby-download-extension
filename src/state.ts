@@ -5,12 +5,12 @@ import { Task } from "./common";
  */
 export class Chapter {
   title: string;
-  path: string;
+  paths: string[];
   offset: number;
 
-  constructor(title: string, path: string, offset: number) {
+  constructor(title: string, paths: string[], offset: number) {
     this.title = title;
-    this.path = path;
+    this.paths = paths;
     this.offset = offset;
   }
 }
@@ -48,6 +48,21 @@ export class LoadState {
       && this.title != undefined
       && this.chapters != undefined
       && this.authors != undefined;
+  }
+}
+
+export class ParsedPartPath {
+  path: string;
+  offset: number;
+
+  constructor(path: string) {
+    const split = path.split("#");
+    if (split.length === 2) {
+      this.offset = parseInt(split[1]);
+    } else {
+      this.offset = 0;
+    }
+    this.path = split[0]
   }
 }
 

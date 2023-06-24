@@ -1,12 +1,14 @@
 import { handleError, Command, Task } from "./common";
-import { addTask, Chapter, LoadState, Title, updateTask } from "./state";
+import { addTask, LoadState, Title, updateTask } from "./state";
 import { mp3WithCUE } from "./processor/mp3-with-cue";
 import { mp3Parts } from "./processor/mp3-parts";
+import { parseToc } from "./processor/utils";
 
+let stateTask: string;
+let stateCheckCounter = 1;
 let state: LoadState;
 let running: boolean;
 let merge: boolean;
-let reloadTask: string;
 browser.runtime.onMessage.addListener(handleCommand);
 
 
@@ -17,15 +19,15 @@ browser.runtime.onMessage.addListener(handleCommand);
  */
 async function handleCommand(command: Command) {
   if (command.cmd === "start") {
+    stateCheckCounter = 1;
     browser.tabs.query({ currentWindow: true, active: true }).then(async () => {
       running = false;
-      reloadTask = undefined;
       // @ts-ignore
       merge = command.args["merge"];
       state = new LoadState();
       // Clear active tasks
       await browser.storage.local.set({ "tasks": [] });
-      reloadTask = await addTask(new Task("", "Reloading Tab", "Running"));
+      const reloadTask = await addTask(new Task("", "Reloading Tab", "Running"));
       console.log("Starting network listener...");
       browser.webRequest.onBeforeRequest.addListener(
         handleMainFrameWebRequest,
@@ -40,6 +42,8 @@ async function handleCommand(command: Command) {
       console.log("Reloading current tab...");
       await browser.tabs.reload();
       console.log("Starting download...");
+      await updateTask(reloadTask, "Completed");
+      stateTask = await addTask(new Task("", "Waiting for State", "Waiting"));
     });
   } else {
     console.log(`Got command ${command.cmd}`);
@@ -72,16 +76,20 @@ function handleSync(details: { url?: string | URL; method?: string; requestId?: 
 function handleMedia(details: { url?: string | URL; method?: string; requestId?: any; }) {
   const filter = browser.webRequest.filterResponseData(details.requestId);
   bufferJSONBody(filter, (body) => {
-    const bookMedia = JSON.parse(body);
-    if (bookMedia.covers["cover300Wide"]) {
-      state.cover_href = bookMedia.covers["cover300Wide"].href;
-    } else if (bookMedia.covers["cover150Wide"]) {
-      state.cover_href = bookMedia.covers["cover150Wide"].href;
-    } else if (bookMedia.covers["cover510Wide"]) {
-      state.cover_href = bookMedia.covers["cover510Wide"].href;
+    try {
+      const bookMedia = JSON.parse(body);
+      if (bookMedia.covers["cover300Wide"]) {
+        state.cover_href = bookMedia.covers["cover300Wide"].href;
+      } else if (bookMedia.covers["cover150Wide"]) {
+        state.cover_href = bookMedia.covers["cover150Wide"].href;
+      } else if (bookMedia.covers["cover510Wide"]) {
+        state.cover_href = bookMedia.covers["cover510Wide"].href;
+      }
+      runIfLoaded();
+    } catch (e) {
+      console.error(e);
+      updateTask(stateTask, "Failed to load state, please reload").catch(handleError);
     }
-
-    runIfLoaded();
   });
 }
 
@@ -127,28 +135,13 @@ function handleTitle(details: { url?: string | URL; method?: string; requestId?:
         `${url.protocol}//${url.host}/${responseJson.spine[i].path}`
       );
     }
+    console.log("Parsed spine");
+    console.log(spine);
 
     console.log("Got table of contents");
     console.log(responseJson.nav.toc);
-    state.chapters = [];
+    state.chapters = parseToc(spine, responseJson.nav.toc);
 
-    for (const row of responseJson.nav.toc) {
-      const last = state.chapters[state.chapters.length - 1];
-      if (last && last.title === row.title) {
-        console.log(`Found contiguous chapters with the same name, merging ${row.title}`);
-      } else {
-        const split = row.path.split("#");
-        let offset;
-        if (split.length === 2) {
-          offset = parseInt(split[1]);
-        } else {
-          offset = 0;
-        }
-        state.chapters.push(
-          new Chapter(row.title, spine.get(split[0]), offset)
-        );
-      }
-    }
     console.log("Parsed table of contents");
     console.log(state.chapters);
   });
@@ -212,7 +205,8 @@ function runIfLoaded(): void {
   if (state.loaded()) {
     console.log("State loaded");
     console.log(state);
-    updateTask(reloadTask, "Completed").catch(handleError);
+    updateTask(stateTask, "Completed")
+      .catch(handleError);
     if (!running) {
       running = true;
       browser.webRequest.onBeforeRequest.removeListener(handleMainFrameWebRequest);
@@ -249,6 +243,9 @@ function runIfLoaded(): void {
       console.log("Already running");
     }
   } else {
+    stateCheckCounter += 1;
+    updateTask(stateTask, `Check ${stateCheckCounter}`)
+      .catch(handleError);
     console.log("Still waiting for state...");
     console.log(state);
   }
