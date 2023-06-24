@@ -17,9 +17,20 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm run test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install deps
+        run: npm install
+      - name: Install web-ext
+        run: npm install -g web-ext
+      - name: Run tests
+        run: npm run package
   automerge:
     runs-on: ubuntu-latest
-    needs: [ test ]
+    needs: [ test, build ]
     permissions:
       pull-requests: write
       contents: write
