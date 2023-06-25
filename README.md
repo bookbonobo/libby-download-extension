@@ -6,6 +6,8 @@ the Libby website for transfer to devices that are now unsupported (e.g. the San
 ## Installation
 Install Libby Downloader from the [Firefox Extension Store](https://addons.mozilla.org/en-US/firefox/extensions/).
 
+ **Note: Minimum supported Firefox version is 102 ESR**
+
 ## Disclaimer
 Books downloaded by this tool are still due on their due date. This tool is **not** intended to help you "keep" your
 borrowed books. The due date can be found in the filename and MP3 tags.
