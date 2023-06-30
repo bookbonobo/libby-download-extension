@@ -179,8 +179,7 @@ export function zeroPad(index: number): string {
  * @param expiration Loan expiration
  */
 export async function downloadZip(zip: any, title: string, expiration: Date) {
-  let zipName = `${title}_DUE_${expiration.toDateString()}.zip`;
-  zipName = zipName.replace(/[/\\?%*:|"<>]/g, "");
+  const zipName = cleanFilename(`${title}_DUE_${expiration.toDateString()}.zip`);
   const processTask = await addTask(new Task(zipName, "Downloading Zip", "Running"));
   const archive = await zip.generateAsync({ type: "blob" });
   const archiveUrl = URL.createObjectURL(archive);
@@ -190,6 +189,15 @@ export async function downloadZip(zip: any, title: string, expiration: Date) {
   }).catch(handleError);
   await updateTask(processTask, "Completed");
   URL.revokeObjectURL(archiveUrl);
+}
+
+/**
+ * Sanitize reserved path characters
+ *
+ * @param filename
+ */
+export function cleanFilename(filename: string): string {
+  return filename.replace(/[/\\?%*:|"<>]/g, "");
 }
 
 /**

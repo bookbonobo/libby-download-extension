@@ -1,4 +1,4 @@
-import { ChapterBounds, downloadZip, getMp3Meta, getSpine, MP3Meta, Spine, zeroPad } from "./utils";
+import { ChapterBounds, cleanFilename, downloadZip, getMp3Meta, getSpine, MP3Meta, Spine, zeroPad } from "./utils";
 import JSZip from "jszip";
 import NodeID3 from "node-id3";
 import { LoadState } from "../state";
@@ -26,8 +26,9 @@ export async function mp3WithCUE(state: LoadState) {
   const tagged = NodeID3.update(mp3Meta.tags, <Buffer>mergedContent);
 
   // Add both files to the zip and download
-  zip.file(`${mp3Meta.title}.cue`, processed.cueContent);
-  zip.file(`${mp3Meta.title}.mp3`, tagged.buffer);
+  const filename = cleanFilename(mp3Meta.title);
+  zip.file(`${filename}.cue`, processed.cueContent);
+  zip.file(`${filename}.mp3`, tagged.buffer);
   console.log(mp3Meta);
   await downloadZip(zip, `${mp3Meta.title.slice(0, Math.min(25, mp3Meta.title.length))}`, state.expires);
 }
