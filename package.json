@@ -52,7 +52,7 @@
     "@flemist/ffmpeg-encode-decode": "^0.0.16",
     "@flemist/ffmpeg.wasm-core-st": "^0.10.2",
     "@flemist/ffmpeg.wasm-st": "^0.10.1",
-    "@types/firefox-webext-browser": "^109.0.0",
+    "@types/firefox-webext-browser": "^111.0.1",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "jszip": "^3.10.1",
