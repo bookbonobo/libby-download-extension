@@ -14,7 +14,6 @@ export async function mp3WithCUE(state: LoadState) {
   const mp3Meta = await getMp3Meta(state);
   const spine = await getSpine(state);
   const zip = new JSZip();
-  const folder = zip.folder(mp3Meta.title);
   const processed = await processMP3Files(spine, mp3Meta);
   console.log("Finished processing mp3");
   for (const chapter of processed.chapters) {
@@ -27,21 +26,24 @@ export async function mp3WithCUE(state: LoadState) {
   const tagged = NodeID3.update(mp3Meta.tags, <Buffer>mergedContent);
 
   // Add both files to the zip and download
-  folder.file(`${mp3Meta.title}.cue`, processed.cueContent);
-  folder.file(`${mp3Meta.title}.mp3`, tagged.buffer);
-  await downloadZip(zip, mp3Meta.title, state.expires);
+  zip.file(`${mp3Meta.title}.cue`, processed.cueContent);
+  zip.file(`${mp3Meta.title}.mp3`, tagged.buffer);
+  console.log(mp3Meta);
+  await downloadZip(zip, `${mp3Meta.title.slice(0, Math.min(25, mp3Meta.title.length))}`, state.expires);
 }
 
 /**
  * Encapsulation of a chapter as it sits in the merged mp3 stream
  */
 export class MP3Chapter {
-  title: string;
+  // this is used as title, but according to the mp3 ID3v2 spec there must
+  // be an elementId field
+  elementID: string;
   startTimeMs: number;
   endTimeMs: number;
 
   constructor(title: string, startTimeMs: number, endTimeMs: number) {
-    this.title = title;
+    this.elementID = title;
     this.startTimeMs = startTimeMs;
     this.endTimeMs = endTimeMs;
   }

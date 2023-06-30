@@ -180,7 +180,7 @@ export function zeroPad(index: number): string {
  */
 export async function downloadZip(zip: any, title: string, expiration: Date) {
   let zipName = `${title}_DUE_${expiration.toDateString()}.zip`;
-  zipName = zipName.replace(/[/\\?%*:|"<>]/g, "-");
+  zipName = zipName.replace(/[/\\?%*:|"<>]/g, "");
   const processTask = await addTask(new Task(zipName, "Downloading Zip", "Running"));
   const archive = await zip.generateAsync({ type: "blob" });
   const archiveUrl = URL.createObjectURL(archive);
