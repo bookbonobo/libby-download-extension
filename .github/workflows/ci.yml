@@ -26,7 +26,7 @@ jobs:
         run: npm install
       - name: Install web-ext
         run: npm install -g web-ext
-      - name: Run tests
+      - name: Run package
         run: npm run package
   automerge:
     runs-on: ubuntu-latest
