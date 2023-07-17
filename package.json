@@ -45,7 +45,7 @@
     "webpack-merge": "^5.8.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.18.6",
+    "@babel/runtime": "^7.22.6",
     "@ffmpeg/core": "^0.11.0",
     "@ffmpeg/core-st": "^0.11.1",
     "@ffmpeg/ffmpeg": "^0.11.6",
