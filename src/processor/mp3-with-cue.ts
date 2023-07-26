@@ -16,8 +16,10 @@ export async function mp3WithCUE(state: LoadState) {
   const zip = new JSZip();
   const processed = await processMP3Files(spine, mp3Meta);
   console.log("Finished processing mp3");
+
+  console.log("Chapter list");
   for (const chapter of processed.chapters) {
-    console.log(chapter);
+    console.log(`${JSON.stringify(chapter)}`);
   }
 
   // Merge parts into a single file
@@ -129,7 +131,7 @@ export async function processMP3Files(spine: Spine, meta: MP3Meta) {
 
   // handle offsets of last chapter
   offset = finalizePartOffsets(
-   current,
+    current,
     spine.index[spine.index.length - 1],
     offset
   );
@@ -159,7 +161,7 @@ function finalizePartOffsets(current: FetchResult, entry: ChapterBounds, offset:
     offset += current.duration;
     console.log(`Current offset ${offset}`);
   }
-  return offset
+  return offset;
 }
 
 /**

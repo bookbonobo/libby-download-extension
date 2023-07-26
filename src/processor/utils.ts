@@ -1,4 +1,4 @@
-import { handleError, Task } from "../common";
+import { Task } from "../common";
 import { addTask, Chapter, LoadState, ParsedPartPath, updateTask } from "../state";
 
 /**
@@ -114,11 +114,13 @@ export async function getMp3Meta(state: LoadState): Promise<MP3Meta> {
  * @param state
  */
 export function getSpine(state: LoadState): Spine {
+  console.log("Building spine");
   const partMap = new Map<number, URL>();
   const index: Array<ChapterBounds> = [];
 
   // Build chapter index
   state.chapters.forEach((chapter, idx) => {
+    console.log(`Building chapter index for ${JSON.stringify(chapter)} index ${idx}`);
     const firstUrl = new URL(chapter.paths[0]);
     const firstPart = parsePartUrl(firstUrl);
     partMap.set(firstPart, firstUrl);
@@ -128,7 +130,9 @@ export function getSpine(state: LoadState): Spine {
       new Position(firstPart, chapter.offset),
       new Position(firstPart, -1)
     );
+    console.log(`Chapter start ${JSON.stringify(bounds)}`);
     for (const path of chapter.paths.slice(1)) {
+      console.log(`Adding part with path ${path}`);
       const url = new URL(path);
       const partNumber = parsePartUrl(url);
       partMap.set(partNumber, url);
@@ -186,7 +190,7 @@ export async function downloadZip(zip: any, title: string, expiration: Date) {
   await browser.downloads.download({
     "filename": zipName,
     url: archiveUrl
-  }).catch(handleError);
+  });
   await updateTask(processTask, "Completed");
   URL.revokeObjectURL(archiveUrl);
 }
@@ -207,6 +211,7 @@ export function cleanFilename(filename: string): string {
  * @param toc TOC from api
  */
 export function parseToc(spine: Map<string, string>, toc: any): Chapter[] {
+  console.log(`Parsing table of contents from ${JSON.stringify(toc)}`);
   const chapters: Chapter[] = [];
   for (const row of toc) {
     const last = chapters[chapters.length - 1];
@@ -214,10 +219,17 @@ export function parseToc(spine: Map<string, string>, toc: any): Chapter[] {
       console.log(`Found contiguous chapters with the same name, merging ${row.title}`);
       if (row.contents) {
         for (const sub of row.contents) {
-          const partUrl = spine.get(sub.path);
+          const part = new ParsedPartPath(sub.path);
+          const partUrl = spine.get(part.path);
           if (last.paths[last.paths.length - 1] != partUrl) {
             last.paths.push(partUrl);
           }
+        }
+      } else if (row.path) {
+        const part = new ParsedPartPath(row.path);
+        const partUrl = spine.get(part.path);
+        if (last.paths[last.paths.length - 1] != partUrl) {
+          last.paths.push(partUrl);
         }
       }
     } else {

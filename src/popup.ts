@@ -1,4 +1,4 @@
-import { Task, handleError, handleResponse, Command } from "./common";
+import { Task,  handleResponse, Command } from "./common";
 
 /**
  * Listen for start or clear tasks clicks
@@ -9,7 +9,7 @@ function listenForClicks() {
       // @ts-ignore
       "merge": document.querySelector("#mergeFiles").checked
     }))
-      .then(handleResponse, handleError);
+      .then(handleResponse, console.error);
   });
   document.querySelector("#clear-tasks").addEventListener("click", () => {
     browser.storage.local.set({ "tasks": [] }).catch(console.error);

@@ -25,10 +25,11 @@ describe("table of contents parsing", () => {
       { "title": "Chapter 1", path: "part-1" },
       {
         "title": "Chapter 2", path: "part-1#400", contents: [
-          { "title": "Chapter 2 (00:00)", path: "part-1#600" },
-          { "title": "Chapter 2 (00:00)", path: "part-2" }
+          { "title": "Chapter 2 (01:00)", path: "part-1#600" },
+          { "title": "Chapter 2 (02:00)", path: "part-2" }
         ]
-      }
+      },
+      { title: "Chapter 2", path: "part-2#600" }
     ];
     const chapters = parseToc(spine, toc);
     expect(chapters).toStrictEqual([
