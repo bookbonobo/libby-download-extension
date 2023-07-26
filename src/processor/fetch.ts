@@ -25,6 +25,7 @@ export class FetchResult {
  */
 export async function fetchPart(part: number, url: URL): Promise<Uint8Array> {
   const downloadTask = await addTask(new Task(`Part${zeroPad(part)}`, "Download", "Running"));
+  console.log(`Fetching ${url}`)
   const response = await fetch(url);
   const content = new Uint8Array(await response.arrayBuffer());
   await updateTask(downloadTask, "Completed");

@@ -1,4 +1,4 @@
-import { handleError, Command, Task } from "./common";
+import { Command, Task } from "./common";
 import { addTask, LoadState, Title, updateTask } from "./state";
 import { mp3WithCUE } from "./processor/mp3-with-cue";
 import { mp3Parts } from "./processor/mp3-parts";
@@ -39,9 +39,9 @@ async function handleCommand(command: Command) {
         { urls: ["<all_urls>"] },
         ["blocking"]
       );
-      console.log("Reloading current tab...");
+      console.log("Reloading current tab");
       await browser.tabs.reload();
-      console.log("Starting download...");
+      console.log("Starting download");
       await updateTask(reloadTask, "Completed");
       stateTask = await addTask(new Task("", "Waiting for State", "Waiting"));
     });
@@ -58,13 +58,17 @@ async function handleCommand(command: Command) {
 function handleSync(details: { url?: string | URL; method?: string; requestId?: any; }) {
   const filter = browser.webRequest.filterResponseData(details.requestId);
   bufferJSONBody(filter, (body) => {
-    const syncState = JSON.parse(body);
-    for (const i in syncState.loans) {
-      if (syncState.loans[i].id === state.id) {
-        state.expires = new Date(syncState.loans[i].expires);
+    try {
+      const syncState = JSON.parse(body);
+      for (const i in syncState.loans) {
+        if (syncState.loans[i].id === state.id) {
+          state.expires = new Date(syncState.loans[i].expires);
+        }
       }
+      runIfLoaded();
+    } catch (e) {
+      handleError(e);
     }
-    runIfLoaded();
   });
 }
 
@@ -87,8 +91,7 @@ function handleMedia(details: { url?: string | URL; method?: string; requestId?:
       }
       runIfLoaded();
     } catch (e) {
-      console.error(e);
-      updateTask(stateTask, "Failed to load state, please reload").catch(handleError);
+      handleError(e);
     }
   });
 }
@@ -101,49 +104,48 @@ function handleMedia(details: { url?: string | URL; method?: string; requestId?:
 function handleTitle(details: { url?: string | URL; method?: string; requestId?: any; }) {
   const filter = browser.webRequest.filterResponseData(details.requestId);
   bufferJSONBody(filter, async (body) => {
-    const titleMeta = JSON.parse(body);
-    const response = await fetch(titleMeta.urls.openbook);
-    const responseJson = await response.json();
-    const title = responseJson.title;
-    state.title = new Title(title.main, title.subtitle, title.collection);
+    try {
+      const titleMeta = JSON.parse(body);
+      const response = await fetch(titleMeta.urls.openbook);
+      const responseJson = await response.json();
+      console.log(`Got response ${JSON.stringify(responseJson)}`);
+      const title = responseJson.title;
+      state.title = new Title(title.main, title.subtitle, title.collection);
 
-    const authors = [];
-    const narrators = [];
-    for (const i in responseJson.creator) {
-      const creator = responseJson.creator[i];
-      if (creator.role === "author") {
-        authors.push(creator.name);
-      } else if (creator.role === "narrator") {
-        narrators.push(creator.name);
+      const authors = [];
+      const narrators = [];
+      for (const i in responseJson.creator) {
+        const creator = responseJson.creator[i];
+        if (creator.role === "author") {
+          authors.push(creator.name);
+        } else if (creator.role === "narrator") {
+          narrators.push(creator.name);
+        }
       }
+
+      state.authors = authors;
+      state.narrators = narrators;
+
+      if (responseJson.short) {
+        state.description = responseJson.description.short;
+      } else if (responseJson.description.long) {
+        state.description = responseJson.description.long;
+      }
+
+      const url = new URL(titleMeta.urls.openbook);
+      const spine = new Map();
+      for (const i in responseJson.spine) {
+        spine.set(
+          responseJson.spine[i]["-odread-original-path"],
+          `${url.protocol}//${url.host}/${responseJson.spine[i].path}`
+        );
+      }
+
+      state.chapters = parseToc(spine, responseJson.nav.toc);
+      console.log(`Parsed table of contents ${JSON.stringify(state.chapters)}`);
+    } catch (e) {
+      handleError(e);
     }
-
-    state.authors = authors;
-    state.narrators = narrators;
-
-    if (responseJson.short) {
-      state.description = responseJson.description.short;
-    } else if (responseJson.description.long) {
-      state.description = responseJson.description.long;
-    }
-
-    const url = new URL(titleMeta.urls.openbook);
-    const spine = new Map();
-    for (const i in responseJson.spine) {
-      spine.set(
-        responseJson.spine[i]["-odread-original-path"],
-        `${url.protocol}//${url.host}/${responseJson.spine[i].path}`
-      );
-    }
-    console.log("Parsed spine");
-    console.log(spine);
-
-    console.log("Got table of contents");
-    console.log(responseJson.nav.toc);
-    state.chapters = parseToc(spine, responseJson.nav.toc);
-
-    console.log("Parsed table of contents");
-    console.log(state.chapters);
   });
 }
 
@@ -203,8 +205,7 @@ function bufferJSONBody(filter: any, action: (body: string) => void) {
  */
 function runIfLoaded(): void {
   if (state.loaded()) {
-    console.log("State loaded");
-    console.log(state);
+    console.log(`State loaded ${JSON.stringify(state)}`);
     updateTask(stateTask, "Completed")
       .catch(handleError);
     if (!running) {
@@ -238,15 +239,21 @@ function runIfLoaded(): void {
             running = false;
           });
       }
-    }
-    {
+    } else {
       console.log("Already running");
     }
   } else {
     stateCheckCounter += 1;
     updateTask(stateTask, `Check ${stateCheckCounter}`)
       .catch(handleError);
-    console.log("Still waiting for state...");
-    console.log(state);
+    console.log(`Still waiting for state ${JSON.stringify(state)}`);
   }
+}
+
+function handleError(error: Error) {
+  state = new LoadState();
+  running = false;
+  console.log(`Error: ${error}`);
+  addTask(new Task("Error", `${error}`, "Failed"))
+    .catch(console.error);
 }
