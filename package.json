@@ -19,7 +19,7 @@
     "@types/chai": "^4.3.5",
     "@types/chrome": "^0.0.239",
     "@types/jest": "^29.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^5.62.0",
     "babel-jest": "^29.5.0",
     "babel-loader": "^9.1.3",
