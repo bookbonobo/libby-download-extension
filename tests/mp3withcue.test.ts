@@ -10,6 +10,19 @@ jest.mock("../src/processor/fetch", () => {
   };
 });
 
+global.browser = {
+  storage: {
+    // @ts-ignore
+    local: {
+      set: jest.fn(),
+      get: jest.fn().mockImplementation(() => {
+        return {"tasks": []}
+      })
+    }
+  }
+}
+
+// @ts-ignore
 fetchPartWithDuration.mockImplementation((part: number, url: URL) => {
   return new FetchResult(part, new Uint8Array(), 100);
 });
@@ -46,7 +59,7 @@ describe("chapter processing", () => {
     ];
     const spine = new Spine(partMap, chapters);
     const meta = new MP3Meta("Book Title", "Author", "Narrator", []);
-    const processed = await processMP3Files(spine, meta);
+    const processed = await processMP3Files(spine, meta, false);
     console.log(processed);
     expect(Array.from(partMap.keys())).toStrictEqual([1, 2, 3, 4, 5]);
     // all parts are mocked to have a duration of 100s

@@ -130,7 +130,7 @@ export function getSpine(state: LoadState): Spine {
       new Position(firstPart, chapter.offset),
       new Position(firstPart, -1)
     );
-    console.log(`Chapter start ${JSON.stringify(bounds)}`);
+    console.log(`Chapter start ${JSON.stringify(bounds.start)}`);
     for (const path of chapter.paths.slice(1)) {
       console.log(`Adding part with path ${path}`);
       const url = new URL(path);
