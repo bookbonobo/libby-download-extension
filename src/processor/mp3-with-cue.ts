@@ -1,20 +1,22 @@
 import { ChapterBounds, cleanFilename, downloadZip, getMp3Meta, getSpine, MP3Meta, Spine, zeroPad } from "./utils";
 import JSZip from "jszip";
 import NodeID3 from "node-id3";
-import { LoadState } from "../state";
+import { addTask, LoadState, updateTask } from "../state";
 import { fetchPartWithDuration, FetchResult } from "./fetch";
+import { Task } from "../common";
 
 /**
  * Fetch Audiobook as a single merged MP3 file with a .cue file
  * providing chapter metadata
  *
  * @param state
+ * @param decode
  */
-export async function mp3WithCUE(state: LoadState) {
+export async function mp3WithCUE(state: LoadState, decode: boolean) {
   const mp3Meta = await getMp3Meta(state);
   const spine = await getSpine(state);
   const zip = new JSZip();
-  const processed = await processMP3Files(spine, mp3Meta);
+  const processed = await processMP3Files(spine, mp3Meta, decode);
   console.log("Finished processing mp3");
 
   console.log("Chapter list");
@@ -76,14 +78,16 @@ FILE "${meta.title}.mp3" MP3`;
  *
  * @param spine Parsed part file map and chapter index
  * @param meta Mp3 metadata
+ * @param decode
  */
-export async function processMP3Files(spine: Spine, meta: MP3Meta) {
+export async function processMP3Files(spine: Spine, meta: MP3Meta, decode: boolean) {
   const processed = new ProcessedMP3(meta);
   let offset = 0;
   let current;
   // iterate chapters, downloading parts and emitting cue file entries
   // along the way
   for (const entry of spine.index) {
+    const chapterTask = await addTask(new Task(entry.title, "Processing", "Running"));
     console.log(`Processing chapter '${entry.title}' ${entry.start.part}#${entry.start.offset} to ${entry.end.part}#${entry.end.offset}`);
     const start = offset;
     const idx = spine.index.indexOf(entry);
@@ -91,10 +95,10 @@ export async function processMP3Files(spine: Spine, meta: MP3Meta) {
       if (current) {
         offset = finalizePartOffsets(current, entry, offset);
         console.log(`Fetching part ${current.part + 1}`);
-        current = await fetchPartWithDuration(current.part + 1, spine.getPartUrl(current.part + 1));
+        current = await fetchPartWithDuration(current.part + 1, spine.getPartUrl(current.part + 1), decode);
       } else {
         console.log(`Fetching part 1`);
-        current = await fetchPartWithDuration(1, spine.getPartUrl(1));
+        current = await fetchPartWithDuration(1, spine.getPartUrl(1), decode);
       }
       processed.parts.push(current.content);
     }
@@ -127,6 +131,7 @@ export async function processMP3Files(spine: Spine, meta: MP3Meta) {
   TRACK ${zeroPad(idx + 1)} AUDIO
     TITLE "${entry.title}"
     INDEX 01 ${toTime(false, Math.round(start))}`;
+    await updateTask(chapterTask, "Completed");
   }
 
   // handle offsets of last chapter

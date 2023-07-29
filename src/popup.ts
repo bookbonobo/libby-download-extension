@@ -7,7 +7,9 @@ function listenForClicks() {
   document.querySelector("#start-download-btn").addEventListener("click", () => {
     browser.runtime.sendMessage(new Command("start", {
       // @ts-ignore
-      "merge": document.querySelector("#mergeFiles").checked
+      "merge": document.querySelector("#mergeFiles").checked,
+      // @ts-ignore
+      "decode": document.querySelector("#decodeDuration").checked,
     }))
       .then(handleResponse, console.error);
   });
@@ -19,6 +21,12 @@ function listenForClicks() {
     console.log(`Setting merge state to ${event.target.checked}`);
     // @ts-ignore
     browser.storage.local.set({ "merge": event.target.checked }).catch(console.error);
+  });
+  document.querySelector("#decodeDuration").addEventListener("click", (event) => {
+    // @ts-ignore
+    console.log(`Setting decode state to ${event.target.checked}`);
+    // @ts-ignore
+    browser.storage.local.set({ "decode": event.target.checked }).catch(console.error);
   });
 }
 
@@ -80,11 +88,24 @@ async function loadMergeState() {
   }
 }
 
+async function loadDecodeState() {
+  const response = await browser.storage.local.get("decode");
+  const checkbox = document.querySelector("#decodeDuration");
+  if (response["decode"] != undefined) {
+    // @ts-ignore
+    checkbox.checked = response["decode"];
+  } else {
+    // @ts-ignore
+    checkbox.checked = false;
+  }
+}
+
 
 // If the active tab is Libby, display pop-up content and listen for clicks
 browser.tabs.query({ currentWindow: true, active: true }).then(async (tabs) => {
   if (tabs[0].url.startsWith("https://libbyapp.com/open/loan/")) {
     await loadMergeState();
+    await loadDecodeState();
     let tasks: Array<Task>;
     const storageResponse = await browser.storage.local.get("tasks");
     if (storageResponse["tasks"]) {

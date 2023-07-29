@@ -9,6 +9,7 @@ let stateCheckCounter = 1;
 let state: LoadState;
 let running: boolean;
 let merge: boolean;
+let decode: boolean;
 browser.runtime.onMessage.addListener(handleCommand);
 
 
@@ -24,6 +25,8 @@ async function handleCommand(command: Command) {
       running = false;
       // @ts-ignore
       merge = command.args["merge"];
+      // @ts-ignore
+      decode = command.args["decode"];
       state = new LoadState();
       // Clear active tasks
       await browser.storage.local.set({ "tasks": [] });
@@ -214,7 +217,7 @@ function runIfLoaded(): void {
       browser.webRequest.onBeforeRequest.removeListener(handleBookMetaWebRequest);
       if (merge) {
         console.log("Merging files and parsing chapters");
-        mp3WithCUE(state)
+        mp3WithCUE(state, decode)
           .then(() => {
             state = new LoadState();
             running = false;
