@@ -32,7 +32,7 @@
     "eslint-webpack-plugin": "^4.0.1",
     "husky": "^8.0.1",
     "jest": "^29.7.0",
-    "lint-staged": "^13.2.3",
+    "lint-staged": "^15.1.0",
     "mini-css-extract-plugin": "^2.6.1",
     "prettier": "^3.1.0",
     "sass": "^1.69.5",
