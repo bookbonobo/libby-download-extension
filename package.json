@@ -50,7 +50,7 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "jszip": "^3.10.1",
-    "music-metadata": "^8.1.5",
+    "music-metadata": "^8.2.0",
     "node-id3": "^0.2.5",
     "normalize.css": "^8.0.1",
     "path-browserify": "^1.0.1",
