@@ -17,7 +17,7 @@
     "@babel/preset-env": "^7.23.6",
     "@babel/preset-typescript": "^7.23.3",
     "@types/chai": "^4.3.10",
-    "@types/chrome": "^0.0.248",
+    "@types/chrome": "^0.0.254",
     "@types/jest": "^29.5.10",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.14.0",
