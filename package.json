@@ -16,7 +16,7 @@
     "@babel/plugin-transform-runtime": "^7.23.6",
     "@babel/preset-env": "^7.23.6",
     "@babel/preset-typescript": "^7.23.3",
-    "@types/chai": "^4.3.10",
+    "@types/chai": "^4.3.11",
     "@types/chrome": "^0.0.254",
     "@types/jest": "^29.5.11",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
