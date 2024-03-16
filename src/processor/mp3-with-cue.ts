@@ -130,7 +130,7 @@ export async function processMP3Files(spine: Spine, meta: MP3Meta, decode: boole
     processed.cueContent += `
   TRACK ${zeroPad(idx + 1)} AUDIO
     TITLE "${entry.title}"
-    INDEX 01 ${toTime(false, Math.round(start))}`;
+    INDEX 01 ${toTime(false, Math.round(start))}:00`;
     await updateTask(chapterTask, "Completed");
   }
 
