@@ -77,15 +77,15 @@ describe("chapter processing", () => {
 FILE "Book Title.mp3" MP3
   TRACK 01 AUDIO
     TITLE "Chapter 1"
-    INDEX 01 00:00
+    INDEX 01 00:00:00
   TRACK 02 AUDIO
     TITLE "Chapter 2"
-    INDEX 01 02:30
+    INDEX 01 02:30:00
   TRACK 03 AUDIO
     TITLE "Chapter 3"
-    INDEX 01 02:55
+    INDEX 01 02:55:00
   TRACK 04 AUDIO
     TITLE "Chapter 4"
-    INDEX 01 04:10`);
+    INDEX 01 04:10:00`);
   });
 });
