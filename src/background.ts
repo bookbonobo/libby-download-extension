@@ -99,6 +99,17 @@ function handleMedia(details: { url?: string | URL; method?: string; requestId?:
   });
 }
 
+function extractBookJson(rsp: str): any {
+  // find the line with "window.bData" and match json string within
+  const regex = /window\.bData\s*=\s*({.*});/g;
+  const match = regex.exec(rsp);
+  if (!match) {
+    return null;
+  }
+  const json = match[1];
+  return JSON.parse(json);
+}
+
 /**
  * Handle title WebRequest
  *
@@ -108,12 +119,10 @@ function handleTitle(details: { url?: string | URL; method?: string; requestId?:
   const filter = browser.webRequest.filterResponseData(details.requestId);
   bufferJSONBody(filter, async (body) => {
     try {
-      const titleMeta = JSON.parse(body);
-      const response = await fetch(titleMeta.urls.openbook);
-      const responseJson = await response.json();
+      const responseJson = extractBookJson(body);
       console.log(`Got response ${JSON.stringify(responseJson)}`);
       const title = responseJson.title;
-      state.title = new Title(title.main, title.subtitle, title.collection);
+      state.title = new Title(title.main, title.subtitle, title.collection ?? "");
 
       const authors = [];
       const narrators = [];
@@ -131,11 +140,11 @@ function handleTitle(details: { url?: string | URL; method?: string; requestId?:
 
       if (responseJson.short) {
         state.description = responseJson.description.short;
-      } else if (responseJson.description.long) {
-        state.description = responseJson.description.long;
+      } else if (responseJson.description.full) {
+        state.description = responseJson.description.full;
       }
 
-      const url = new URL(titleMeta.urls.openbook);
+      const url = new URL(details.url);
       const spine = new Map();
       for (const i in responseJson.spine) {
         spine.set(
@@ -174,7 +183,7 @@ function handleBookMetaWebRequest(details: { url: string | URL; method: string; 
       handleSync(details);
     } else if (url.pathname.endsWith(`/media/${state.id}`)) {
       handleMedia(details);
-    } else if (url.pathname.endsWith(`/title/${state.id}`)) {
+    } else if (url.host.startsWith("dewey-") && url.pathname === "/") { // the /?m= req
       handleTitle(details);
     }
   }
