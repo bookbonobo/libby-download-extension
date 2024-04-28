@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Libby Download",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Downloads Audiobooks for transfer to unsupported devices",
   "icons": {
     "48": "icons/music-player-fill.svg",

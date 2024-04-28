@@ -1,6 +1,6 @@
 {
   "name": "libby-download-extension",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Firefox extension to download Libby audiobooks for transfer to unsupported devices",
   "scripts": {
     "start": "webpack --watch --config webpack.dev.js",
