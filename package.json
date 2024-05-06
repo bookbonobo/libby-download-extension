@@ -46,7 +46,7 @@
     "webpack-merge": "^5.10.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.23.8",
+    "@babel/runtime": "^7.24.5",
     "@types/firefox-webext-browser": "^120.0.3",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
